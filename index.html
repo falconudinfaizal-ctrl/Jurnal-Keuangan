@@ -71,6 +71,7 @@
 
     // 2. LOGIKA MENGIRIM DATA KE SPREADSHEET
     const scriptURL = 'https://script.google.com/macros/s/AKfycbyKdrwgYJPRa9KiE3ZM9ijFIjbMWOFJ3CEGT3cbuFVv5zLXiGgNphdApP3B5ObjDNoP/exec';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbyCyw3wgdzEYxbNLjDa1iH5eum9BHtmJBF7Kka2lKDons7LzZLJxaWVBINvIZqohw9h/exec';
     const form = document.getElementById('formKeuangan');
     const btnSubmit = document.getElementById('btnSubmit');
 
@@ -79,6 +80,7 @@
         btnSubmit.innerHTML = 'Memproses...';
 
         fetch(scriptURL, { method: 'POST', body: new FormData(form)})
+fetch(scriptURL, { method: 'POST', body: new FormData(form), mode: 'no-cors'})
             .then(response => {
                 alert('Jurnal berhasil dicatat!');
                 form.reset();
