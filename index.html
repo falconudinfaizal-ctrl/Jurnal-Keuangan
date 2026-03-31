@@ -3,19 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Input Jurnal Harian</title>
+    <title>Buku Besar Digital</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; max-width: 400px; margin: auto; background-color: #f4f4f9; }
-        .form-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        input, select, button { width: 100%; padding: 10px; margin-top: 5px; margin-bottom: 15px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;}
-        button { background-color: #28a745; color: white; border: none; cursor: pointer; font-weight: bold; }
-        button:hover { background-color: #218838; }
+        body { font-family: sans-serif; padding: 20px; max-width: 450px; margin: auto; background-color: #f0f2f5; }
+        .form-container { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #333; margin-top: 0; }
+        label { font-weight: bold; font-size: 14px; color: #555; display: block; margin-top: 15px; }
+        input, select, button { width: 100%; padding: 12px; margin-top: 5px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
+        button { background-color: #0d6efd; color: white; border: none; cursor: pointer; font-weight: bold; margin-top: 20px; }
+        button:hover { background-color: #0b5ed7; }
     </style>
 </head>
 <body>
 
 <div class="form-container">
-    <h2>Catat Transaksi</h2>
+    <h2>Catat Transaksi Baru</h2>
     <form id="formKeuangan">
         <label>Tanggal Transaksi:</label>
         <input type="date" name="tanggal" required>
@@ -29,10 +31,10 @@
 
         <label>Kategori:</label>
         <select name="kategori" id="kategori" required>
-            <option value="">-- Pilih Jenis Transaksi Dulu --</option>
+            <option value="">-- Pilih Jenis Dulu --</option>
         </select>
 
-        <label>Sumber / Posisi Harta Lancar:</label>
+        <label>Sumber / Posisi Harta:</label>
         <select name="sumber" required>
             <option value="Kas Tunai">Kas Tunai</option>
             <option value="Rekening Bank">Rekening Bank</option>
@@ -40,55 +42,67 @@
         </select>
 
         <label>Keterangan Detail:</label>
-        <input type="text" name="keterangan" placeholder="Contoh: Beli mentega, terima dana proyek..." required>
+        <input type="text" name="keterangan" placeholder="Contoh: Beli mentega, terima pembayaran..." required>
 
         <label>Nominal (Rp):</label>
-        <input type="number" name="nominal" required>
+        <input type="text" id="nominal_tampil" placeholder="Rp 0" required>
+        <input type="hidden" name="nominal" id="nominal_asli" required>
 
         <button type="submit" id="btnSubmit">Kirim Data</button>
     </form>
 </div>
 
 <script>
-    // 1. LOGIKA UNTUK MENU KATEGORI DINAMIS
+    // 1. URL APPS SCRIPT (GANTI DENGAN URL BARUMU DI SINI)
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbwJZVzt0HqqAN2OaGzUrQPg0hFU9Y_YbiRYQnzkf0Lcfk9YswL2r9fy1kC3L7FCCAxQ/exec'; 
+
+    // 2. LOGIKA KATEGORI DINAMIS
     const jenisSelect = document.getElementById('jenis');
     const kategoriSelect = document.getElementById('kategori');
-    
-    const opsiPemasukan = ['Uang Saku', 'Hasil Penjualan', 'Dana Proyek', 'Lain-lain'];
-    const opsiPengeluaran = ['Bahan Baku', 'Perlengkapan Produksi', 'Transportasi', 'Konsumsi Pribadi', 'Lain-lain'];
+    const opsiPemasukan = ['Penjualan', 'Dana Usaha', 'Lain-lain'];
+    const opsiPengeluaran = ['Bahan Baku', 'Perlengkapan', 'Operasional', 'Lain-lain'];
 
     jenisSelect.addEventListener('change', function() {
-        kategoriSelect.innerHTML = ''; // Kosongkan pilihan sebelumnya
+        kategoriSelect.innerHTML = ''; 
         let pilihan = this.value === 'Pemasukan' ? opsiPemasukan : opsiPengeluaran;
-        
         pilihan.forEach(opsi => {
-            let elemenBaru = document.createElement('option');
-            elemenBaru.value = opsi;
-            elemenBaru.text = opsi;
-            kategoriSelect.appendChild(elemenBaru);
+            let el = document.createElement('option');
+            el.value = opsi; el.text = opsi;
+            kategoriSelect.appendChild(el);
         });
     });
 
-    // 2. LOGIKA MENGIRIM DATA KE SPREADSHEET
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbyCyw3wgdzEYxbNLjDa1iH5eum9BHtmJBF7Kka2lKDons7LzZLJxaWVBINvIZqohw9h/exec';
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbyKdrwgYJPRa9KiE3ZM9ijFIjbMWOFJ3CEGT3cbuFVv5zLXiGgNphdApP3B5ObjDNoP/exec';
+    // 3. LOGIKA FORMAT RUPIAH
+    const nominalTampil = document.getElementById('nominal_tampil');
+    const nominalAsli = document.getElementById('nominal_asli');
+    nominalTampil.addEventListener('keyup', function() {
+        let angka = this.value.replace(/[^,\d]/g, '');
+        this.value = angka ? 'Rp ' + angka.replace(/\B(?=(\d{3})+(?!\d))/g, ".") : '';
+        nominalAsli.value = angka;
+    });
+
+    // 4. PENGIRIMAN DATA (ANTI-ERROR CORS)
     const form = document.getElementById('formKeuangan');
     const btnSubmit = document.getElementById('btnSubmit');
 
     form.addEventListener('submit', e => {
         e.preventDefault();
         btnSubmit.innerHTML = 'Memproses...';
+        btnSubmit.style.backgroundColor = '#6c757d';
 
-        fetch(scriptURL, { method: 'POST', body: new FormData(form)})
-            .then(response => {
-                alert('Jurnal berhasil dicatat!');
+        // mode: 'no-cors' adalah kunci agar tidak error
+        fetch(scriptURL, { method: 'POST', body: new FormData(form), mode: 'no-cors'})
+            .then(() => {
+                alert('Data berhasil dicatat ke Spreadsheet!');
                 form.reset();
-                kategoriSelect.innerHTML = '<option value="">-- Pilih Jenis Transaksi Dulu --</option>';
+                kategoriSelect.innerHTML = '<option value="">-- Pilih Jenis Dulu --</option>';
                 btnSubmit.innerHTML = 'Kirim Data';
+                btnSubmit.style.backgroundColor = '#0d6efd';
             })
             .catch(error => {
-                alert('Gagal mengirim data.');
+                alert('Terjadi kesalahan jaringan.');
                 btnSubmit.innerHTML = 'Kirim Data';
+                btnSubmit.style.backgroundColor = '#0d6efd';
             });
     });
 </script>
