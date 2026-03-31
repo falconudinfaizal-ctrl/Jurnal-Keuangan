@@ -98,6 +98,19 @@
     const form = document.getElementById('formKeuangan');
     const btnSubmit = document.getElementById('btnSubmit');
 
+// FUNGSI UNTUK MENAMPILKAN NOTIFIKASI ESTETIK (TOAST)
+    function tampilkanToast(pesan, isError = false) {
+        const toast = document.getElementById('toast');
+        toast.innerText = pesan;
+        if (isError) { 
+            toast.classList.add('error'); 
+        } else { 
+            toast.classList.remove('error'); 
+        }
+        toast.classList.add('show');
+        setTimeout(() => { toast.classList.remove('show'); }, 3000);
+    }
+
     form.addEventListener('submit', e => {
         e.preventDefault();
 
