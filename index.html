@@ -12,6 +12,17 @@
         input, select, button { width: 100%; padding: 12px; margin-top: 5px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
         button { background-color: #0d6efd; color: white; border: none; cursor: pointer; font-weight: bold; margin-top: 20px; }
         button:hover { background-color: #0b5ed7; }
+
+        /* CSS UNTUK NOTIFIKASI POP-UP (TOAST) ESTETIK */
+        .toast {
+            visibility: hidden; min-width: 250px; background-color: #198754; color: #fff;
+            text-align: center; border-radius: 8px; padding: 16px; position: fixed;
+            z-index: 1000; left: 50%; bottom: 30px; transform: translateX(-50%);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2); opacity: 0;
+            transition: opacity 0.5s, bottom 0.5s, visibility 0.5s; font-weight: bold;
+        }
+        .toast.show { visibility: visible; opacity: 1; bottom: 50px; }
+        .toast.error { background-color: #dc3545; }
     </style>
 </head>
 <body>
@@ -52,6 +63,8 @@
     </form>
 </div>
 
+<div id="toast" class="toast">Pesan akan muncul di sini</div>
+
 <script>
     // 1. URL APPS SCRIPT (GANTI DENGAN URL BARUMU DI SINI)
     const scriptURL = 'https://script.google.com/macros/s/AKfycbxjlb4g1citV9i0pQvj6oNNHoe-hiblCn7eYhiXlBvI-6mSn2Bz3hwN6yugn-cJS2xZ/exec'; 
@@ -81,26 +94,36 @@
         nominalAsli.value = angka;
     });
 
-    // 4. PENGIRIMAN DATA (ANTI-ERROR CORS)
+    // 5. PENGIRIMAN DATA & VALIDASI
     const form = document.getElementById('formKeuangan');
     const btnSubmit = document.getElementById('btnSubmit');
 
     form.addEventListener('submit', e => {
         e.preventDefault();
+
+        // --- IDE 2: VALIDASI ANTI-NOL & ANTI-MINUS ---
+        const nilaiNominal = parseInt(nominalAsli.value);
+        if (!nilaiNominal || nilaiNominal <= 0) {
+            tampilkanToast('Gagal: Nominal tidak boleh kosong atau Rp 0!', true);
+            return; // Hentikan proses jika nominal tidak valid
+        }
+        // ---------------------------------------------
+
         btnSubmit.innerHTML = 'Memproses...';
         btnSubmit.style.backgroundColor = '#6c757d';
 
-        // mode: 'no-cors' adalah kunci agar tidak error
         fetch(scriptURL, { method: 'POST', body: new FormData(form), mode: 'no-cors'})
             .then(() => {
-                alert('Data berhasil dicatat ke Spreadsheet!');
+                // --- IDE 3: PANGGIL NOTIFIKASI TOAST SUKSES ---
+                tampilkanToast('✔️ Jurnal berhasil dicatat!');
+                
                 form.reset();
                 kategoriSelect.innerHTML = '<option value="">-- Pilih Jenis Dulu --</option>';
                 btnSubmit.innerHTML = 'Kirim Data';
                 btnSubmit.style.backgroundColor = '#0d6efd';
             })
             .catch(error => {
-                alert('Terjadi kesalahan jaringan.');
+                tampilkanToast('❌ Terjadi kesalahan jaringan.', true);
                 btnSubmit.innerHTML = 'Kirim Data';
                 btnSubmit.style.backgroundColor = '#0d6efd';
             });
